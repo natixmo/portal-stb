@@ -141,7 +141,8 @@ video{width:100%;height:100%;display:block}
 <div id="vw-tv">
   <div id="sb"><div id="chs"></div></div>
   <div id="rp">
-    <video id="player" autoplay></video>
+    <video id="player-video" style="display:none;width:100%;height:100%;position:absolute;top:0;left:0"></video>
+    <object id="player" type="application/AVPlayer" style="width:100%;height:100%;position:absolute;top:0;left:0;display:block" data=""></object>
     <iframe id="plframe" src="" style="width:100%;height:100%;border:none;display:none;position:absolute;top:0;left:0;background:#000"></iframe>
     <object id="plobj" data="" type="" style="width:100%;height:100%;display:none;position:absolute;top:0;left:0;background:#000"></object>
     <div id="ovl">
@@ -462,34 +463,30 @@ function moveSel(n){
     G('ovl').style.display='block';clearTimeout(ovlT);ovlT=setTimeout(function(){G('ovl').style.display='none';},3000);}}
 
 // ---- Cascade de reproduccion ----
+// ---- AVPlayer NPAPI ----
+var avp=null;
+function getAVP(){
+  if(!avp){try{avp=new AVPlayer();diag('new AVPlayer() OK');}catch(e){diag('AVPlayer constructor ERR: '+e.message);}}
+  return avp;
+}
+
 var METHODS=[
-  {id:'setattr',   name:'setAttribute src',
-    fn:function(v,u){v.style.display='block';v.setAttribute('src',u);}},
-  {id:'rebuild',   name:'DOM rebuild video',
-    fn:function(v,u){
-      v.style.display='block';
-      var p=v.parentNode,clone=document.createElement('video');
-      clone.id='player';clone.setAttribute('autoplay','autoplay');
-      clone.setAttribute('src',u);clone.style.cssText=v.style.cssText;
-      clone.onerror=v.onerror;clone.onplaying=v.onplaying;clone.oncanplay=v.oncanplay;clone.onstalled=v.onstalled;
-      p.replaceChild(clone,v);casc.v=clone;
-    }},
-  {id:'src-hls',   name:'source HLS x-mpegURL',
-    fn:function(v,u){v.style.display='block';while(v.firstChild)v.removeChild(v.firstChild);var s=document.createElement('source');s.setAttribute('src',u);s.setAttribute('type','application/x-mpegURL');v.appendChild(s);}},
-  {id:'src-apple', name:'source Apple mpegurl',
-    fn:function(v,u){v.style.display='block';while(v.firstChild)v.removeChild(v.firstChild);var s=document.createElement('source');s.setAttribute('src',u);s.setAttribute('type','application/vnd.apple.mpegurl');v.appendChild(s);}},
-  {id:'src-mp4',   name:'source video/mp4',
-    fn:function(v,u){v.style.display='block';while(v.firstChild)v.removeChild(v.firstChild);var s=document.createElement('source');s.setAttribute('src',u);s.setAttribute('type','video/mp4');v.appendChild(s);}},
-  {id:'obj-hls',   name:'object x-mpegURL (HbbTV)',
-    fn:function(v,u){v.style.display='none';var o=G('plobj');o.setAttribute('type','application/x-mpegURL');o.setAttribute('data',u);o.style.display='block';}},
-  {id:'obj-mp2t',  name:'object video/mp2t',
-    fn:function(v,u){v.style.display='none';var o=G('plobj');o.setAttribute('type','video/mp2t');o.setAttribute('data',u);o.style.display='block';}},
-  {id:'obj-mpeg',  name:'object video/mpeg',
-    fn:function(v,u){v.style.display='none';var o=G('plobj');o.setAttribute('type','video/mpeg');o.setAttribute('data',u);o.style.display='block';}},
-  {id:'iframe',    name:'iframe embed',
-    fn:function(v,u){v.style.display='none';var f=G('plframe');f.style.display='block';f.setAttribute('src',u);}},
-  {id:'location',  name:'window.location (player nativo)',
-    fn:function(v,u){diag('Navegando a: '+u.substring(0,60));window.location.href=u;}},
+  {id:'loadurl',     name:'AVPlayer.loadurl(url)',
+    fn:function(v,u){var p=getAVP();if(!p) return;try{p.loadurl(u);diag('loadurl() OK');}catch(e){diag('loadurl ERR:'+e.message);throw e;}}},
+  {id:'playbackOpen',name:'AVPlayer.playbackOpen(url)',
+    fn:function(v,u){var p=getAVP();if(!p) return;try{p.playbackOpen(u);diag('playbackOpen() OK');}catch(e){diag('playbackOpen ERR:'+e.message);throw e;}}},
+  {id:'open',        name:'AVPlayer.open(url)',
+    fn:function(v,u){var p=getAVP();if(!p) return;try{p.open(u);diag('open() OK');}catch(e){diag('open ERR:'+e.message);throw e;}}},
+  {id:'mainplayer',  name:'AVPlayer.getMainPlayer().loadurl()',
+    fn:function(v,u){var p=getAVP();if(!p) return;var mp=p.getMainPlayer();if(!mp) throw new Error('no mainPlayer');try{mp.loadurl(u);diag('mainPlayer.loadurl() OK');}catch(e){diag('mainPlayer ERR:'+e.message);throw e;}}},
+  {id:'play',        name:'AVPlayer.play(url)',
+    fn:function(v,u){var p=getAVP();if(!p) return;try{p.play(u);diag('play() OK');}catch(e){diag('play ERR:'+e.message);throw e;}}},
+  {id:'ag-open',     name:'AVPlayer.Ag_player_open(url)',
+    fn:function(v,u){var p=getAVP();if(!p) return;try{p.Ag_player_open(u);diag('Ag_player_open() OK');}catch(e){diag('Ag_player_open ERR:'+e.message);throw e;}}},
+  {id:'data-attr',   name:'object data=url (NPAPI)',
+    fn:function(v,u){var o=G('player');o.setAttribute('data',u);diag('data attr asignado');}},
+  {id:'location',    name:'window.location player nativo',
+    fn:function(v,u){diag('>>> Navegando a: '+u.substring(0,60));window.location.href=u;}},
 ];
 var casc={v:null,urls:[],ui:0,mi:0,tmr:null,
   reset:function(){
@@ -515,7 +512,7 @@ var casc={v:null,urls:[],ui:0,mi:0,tmr:null,
     this.reset();
     try{m.fn(this.v,u);}catch(e){diag('EXC: '+e.message);this.mi++;var s=this;setTimeout(function(){s.next();},200);return;}
     var s=this;
-    this.tmr=setTimeout(function(){diag('Timeout - siguiente...');s.mi++;s.next();},5000);
+    this.tmr=setTimeout(function(){diag('Timeout - siguiente...');s.mi++;s.next();},3000);
   },
   ok:function(){
     clearTimeout(this.tmr);
@@ -696,38 +693,21 @@ loadKeys();renderKeyTable();loadSavedSrc();renderSources();
 document.body.tabIndex=0;document.body.focus();
 setTimeout(function(){
   var CL=function(m){try{console.log('[DIAG] '+m);}catch(e){}diag(m);};
-  var v=G('player');
-  CL('======= TAKIN VIDEO DIAG =======');
-  CL('v.tagName: '+(v?v.tagName:'NULL'));
-  CL('typeof v.src: '+typeof v.src);
-  CL('typeof v.play: '+typeof v.play);
-  CL('typeof v.load: '+typeof v.load);
-  CL('typeof MediaSource: '+typeof window.MediaSource);
-  // Scan all enumerable keys on video element
-  var fns=[],attrs=[],others=[];
-  try{
-    for(var k in v){
-      try{
-        var t=typeof v[k];
-        if(t==='function') fns.push(k);
-        else if(t==='string'||t==='number'||t==='boolean') attrs.push(k+'='+v[k]);
-        else if(t!=='undefined') others.push(k+'('+t+')');
-      }catch(e){}
-    }
-  }catch(e){CL('scan error: '+e.message);}
-  CL('FUNCTIONS('+fns.length+'): '+fns.join(', '));
-  CL('ATTRS('+attrs.length+'): '+attrs.join(' | '));
-  CL('OTHER('+others.length+'): '+others.join(' | '));
-  // Window APIs
-  var wapis=['HiPlayer','YPlayer','yxPlayer','hitvApp','HiMedia','stbAPI','nativePlayer','YXPlayer',
-    'HiSTBPlayer','browser','plugin','MediaPlayer','videoPlugin','tvplugin','takinPlayer',
-    'oipfObjectFactory','oipf','hbbtv','Hybroad','hybroad','STB','stb','App','NativePlayer'];
-  var wfound=[];
-  for(var i=0;i<wapis.length;i++){
-    try{if(typeof window[wapis[i]]!=='undefined') wfound.push(wapis[i]+':'+typeof window[wapis[i]]);}catch(e){}
+  CL('======= AVPlayer DIAG =======');
+  var p=null;
+  try{p=new AVPlayer();CL('new AVPlayer() OK');}catch(e){CL('new AVPlayer() ERR: '+e.message);}
+  if(p){
+    var fns=[],props=[];
+    try{for(var k in p){try{var t=typeof p[k];if(t==='function')fns.push(k);else if(t!=='undefined')props.push(k+'('+t+')');}catch(e){}}}catch(e){}
+    CL('METHODS('+fns.length+'): '+fns.join(', '));
+    CL('PROPS: '+props.join(' | '));
+    // Test specific methods
+    var test=['loadurl','playbackOpen','open','play','stop','pause','getMainPlayer','printf','Ag_player_open','Ag_player_play','Ag_player_stop'];
+    var found=[];
+    for(var i=0;i<test.length;i++){try{if(typeof p[test[i]]==='function')found.push(test[i]);}catch(e){}}
+    CL('CONFIRMED: '+found.join(', '));
   }
-  CL('WINDOW('+wfound.length+'): '+(wfound.length?wfound.join(' | '):'ninguna'));
-  CL('=================================');
+  CL('==============================');
 },2000);
 loadList(currentSrc,false);
 </script>

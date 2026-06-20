@@ -629,6 +629,21 @@ document.addEventListener('keydown',function(e){
 
 loadKeys();renderKeyTable();loadSavedSrc();renderSources();
 document.body.tabIndex=0;document.body.focus();
+// Diagnostico de capacidades de video en TAKIN
+setTimeout(function(){
+  var v=document.createElement('video');
+  diag('=== DIAGNOSTICO VIDEO ===');
+  diag('canPlay HLS: '+v.canPlayType('application/x-mpegURL'));
+  diag('canPlay Apple HLS: '+v.canPlayType('application/vnd.apple.mpegurl'));
+  diag('canPlay MP4: '+v.canPlayType('video/mp4; codecs="avc1.42E01E"'));
+  diag('canPlay TS: '+v.canPlayType('video/mp2t'));
+  diag('MediaSource: '+typeof window.MediaSource);
+  var apis=['HiPlayer','YPlayer','yxPlayer','hitvApp','HiMedia','stbAPI','nativePlayer','takin','YXPlayer','HiSTBPlayer'];
+  for(var i=0;i<apis.length;i++){
+    if(typeof window[apis[i]]!=='undefined') diag('API nativa: window.'+apis[i]+' ('+typeof window[apis[i]]+')');
+  }
+  diag('=== FIN DIAGNOSTICO ===');
+},2000);
 loadList(currentSrc,false);
 </script>
 </body>

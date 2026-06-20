@@ -629,20 +629,23 @@ document.addEventListener('keydown',function(e){
 
 loadKeys();renderKeyTable();loadSavedSrc();renderSources();
 document.body.tabIndex=0;document.body.focus();
-// Diagnostico de capacidades de video en TAKIN
 setTimeout(function(){
+  function tc(fn){try{return fn();}catch(e){return 'ERR:'+e.message;}}
   var v=document.createElement('video');
-  diag('=== DIAGNOSTICO VIDEO ===');
-  diag('canPlay HLS: '+v.canPlayType('application/x-mpegURL'));
-  diag('canPlay Apple HLS: '+v.canPlayType('application/vnd.apple.mpegurl'));
-  diag('canPlay MP4: '+v.canPlayType('video/mp4; codecs="avc1.42E01E"'));
-  diag('canPlay TS: '+v.canPlayType('video/mp2t'));
+  diag('== DIAG TAKIN ==');
+  diag('canPlayType existe: '+(typeof v.canPlayType));
+  diag('canPlay HLS: '+tc(function(){return v.canPlayType('application/x-mpegURL');}));
+  diag('canPlay MP4: '+tc(function(){return v.canPlayType('video/mp4');}));
   diag('MediaSource: '+typeof window.MediaSource);
-  var apis=['HiPlayer','YPlayer','yxPlayer','hitvApp','HiMedia','stbAPI','nativePlayer','takin','YXPlayer','HiSTBPlayer'];
+  diag('v.src existe: '+(typeof v.src));
+  diag('v.play existe: '+(typeof v.play));
+  diag('v.load existe: '+(typeof v.load));
+  var apis=['HiPlayer','YPlayer','yxPlayer','hitvApp','HiMedia','stbAPI','nativePlayer','YXPlayer','HiSTBPlayer','browser','plugin'];
   for(var i=0;i<apis.length;i++){
-    if(typeof window[apis[i]]!=='undefined') diag('API nativa: window.'+apis[i]+' ('+typeof window[apis[i]]+')');
+    var t=tc(function(){return typeof window[apis[i]];});
+    if(t!=='undefined') diag('window.'+apis[i]+': '+t);
   }
-  diag('=== FIN DIAGNOSTICO ===');
+  diag('== FIN DIAG ==');
 },2000);
 loadList(currentSrc,false);
 </script>

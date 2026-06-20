@@ -467,16 +467,21 @@ function play(n){if(n<0||n>=chs.length) return;
   var v=G('player');
   v.onerror=function(){
     var ec=v.error?v.error.code:0;
-    var em={1:'Abortado',2:'Error de red',3:'Error codec/decode',4:'Formato no soportado'}[ec]||('codigo '+ec);
+    var em={1:'Abortado',2:'Error de red',3:'Error codec',4:'Formato no soportado'}[ec]||('cod '+ec);
     diag('VIDEO ERR '+ec+': '+em);G('dbg').textContent='ERR '+ec+': '+em;
   };
-  v.oncanplay=function(){diag('canplay: formato reconocido OK');G('dbg').textContent='canplay OK';};
-  v.onplaying=function(){diag('REPRODUCIENDO correctamente');G('dbg').textContent='PLAY OK';};
-  v.onstalled=function(){diag('stalled: stream sin datos');};
-  v.onwaiting=function(){diag('waiting: buffering...');};
-  v.onabort=function(){diag('abort: carga cancelada');};
-  v.src=url;
-  diag('src asignado - esperando autoplay...');
+  v.oncanplay=function(){diag('canplay: formato OK');G('dbg').textContent='canplay OK';};
+  v.onplaying=function(){diag('REPRODUCIENDO OK');G('dbg').textContent='PLAY OK';};
+  v.onstalled=function(){diag('stalled: sin datos del stream');};
+  v.onwaiting=function(){diag('buffering...');};
+  var isHLS=(url.indexOf('.m3u')>=0);
+  var mime=isHLS?'application/x-mpegURL':'video/mp4';
+  diag('Intentando source type='+mime);
+  while(v.firstChild) v.removeChild(v.firstChild);
+  var src=document.createElement('source');
+  src.setAttribute('src',url);
+  src.setAttribute('type',mime);
+  v.appendChild(src);
   G('mw').style.display='none';}
 
 function setVol(d){var v=G('player'),nv=Math.min(1,Math.max(0,v.volume+d)),n=Math.round(nv*10),bar='[';

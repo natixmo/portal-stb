@@ -1,1 +1,4 @@
-
+{
+  "channels": "https://www.tdtchannels.com/lists/tv.json",
+  "epg": "https://www.tdtchannels.com/epg/TV.json"
+}

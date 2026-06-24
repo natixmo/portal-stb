@@ -20,7 +20,7 @@
     "force_http_all": true
   },
   "debug": {
-    "show_overlay": true,
+    "show_overlay": false,
     "print_console": true,
     "log_keys": false,
     "log_memory_ms": 30000

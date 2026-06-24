@@ -1,8 +1,8 @@
 {
   "_comment": "Configuracion remota del portal STB Hybroad A350 - natixmo/portal-stb",
   "channels": {
-    "url": "http://www.tdtchannels.com/lists/tv.json",
-    "max": 20
+    "url": "https://iptv-org.github.io/iptv/index.m3u",
+    "max": 500
   },
   "epg": {
     "url": "http://www.tdtchannels.com/epg/TV.json",

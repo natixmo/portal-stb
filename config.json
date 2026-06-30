@@ -1,8 +1,8 @@
 {
   "_comment": "Configuracion remota del portal STB Hybroad A350 - natixmo/portal-stb",
   "ota": {
-    "version": 9,
-    "url": "http://cdn.jsdelivr.net/gh/natixmo/portal-stb@main/portal_v9.html"
+    "version": 10,
+    "url": "http://cdn.jsdelivr.net/gh/natixmo/portal-stb@main/portal_v10.html"
   },
   "channels": {
     "url": "http://cdn.jsdelivr.net/gh/Free-TV/IPTV@master/playlist.m3u8",
